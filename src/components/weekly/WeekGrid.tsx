@@ -1,0 +1,62 @@
+import { CalendarDay, TimeFormat } from "../../types";
+import { generateTimeSlots } from "../../lib/calendar/weekBuilder";
+import { formatTime } from "../../lib/calendar/timeFormatter";
+import DayColumn from "./DayColumn";
+
+const HOUR_HEIGHT = 50; // pixels per hour
+
+interface WeekGridProps {
+  days: CalendarDay[];
+  timezone: string;
+  timeFormat: TimeFormat;
+  colorAssignments: Record<string, string>;
+}
+
+export default function WeekGrid({
+  days,
+  timezone,
+  timeFormat,
+  colorAssignments,
+}: WeekGridProps) {
+  const timeSlots = generateTimeSlots(6, 23);
+
+  return (
+    <div className="overflow-x-auto">
+      {/* Main grid container */}
+      <div className="flex border border-gray-200 rounded">
+        {/* Time axis */}
+        <div className="flex-shrink-0 w-16 border-r border-gray-200">
+          <div className="h-12 border-b border-gray-200"></div>
+          {timeSlots.map((hour) => {
+            const hourDate = new Date();
+            hourDate.setHours(hour, 0, 0, 0);
+            return (
+              <div
+                key={hour}
+                className="border-b border-gray-100 text-xs text-gray-600 p-1 text-right"
+                style={{ height: HOUR_HEIGHT }}
+              >
+                {formatTime(hourDate, timezone, timeFormat).split("-")[0]}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Days columns */}
+        <div className="flex flex-1">
+          {days.map((day) => (
+            <DayColumn
+              key={day.date.toISOString()}
+              day={day}
+              timeSlots={timeSlots}
+              hourHeight={HOUR_HEIGHT}
+              timezone={timezone}
+              timeFormat={timeFormat}
+              colorAssignments={colorAssignments}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

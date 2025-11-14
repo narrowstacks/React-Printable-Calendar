@@ -1,0 +1,50 @@
+import { useMemo, forwardRef } from 'react'
+import { useCalendarStore } from '../../store/calendarStore'
+import { mergeShifts } from '../../lib/grouping/shiftMerger'
+import { buildWeekCalendar } from '../../lib/calendar/weekBuilder'
+import WeekGrid from './WeekGrid'
+import Legend from '../shared/Legend'
+
+const WeeklyView = forwardRef<HTMLDivElement>((_, printRef) => {
+  const { rawEvents, people, currentDate, settings } = useCalendarStore()
+
+  const { days } = useMemo(() => {
+    if (rawEvents.length === 0) {
+      return { days: [] }
+    }
+
+    const { shifts: _, mergedShifts } = mergeShifts(rawEvents, people, settings.colorAssignments)
+    const days = buildWeekCalendar(currentDate, [], mergedShifts)
+
+    return { days }
+  }, [rawEvents, people, currentDate, settings.colorAssignments])
+
+  if (rawEvents.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+        <p>No calendar data loaded. Please upload an ICS file or provide a URL.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={printRef}
+      className={`
+        bg-white rounded-lg shadow calendar-container
+        ${settings.orientation === 'landscape' ? 'landscape' : 'portrait'}
+      `}
+    >
+      <div className="p-6">
+        <WeekGrid days={days} timezone={settings.timezone} timeFormat={settings.timeFormat} colorAssignments={settings.colorAssignments} />
+        <div className="legend-section mt-8 border-t pt-6">
+          <Legend people={Array.from(people.values())} colorAssignments={settings.colorAssignments} />
+        </div>
+      </div>
+    </div>
+  )
+})
+
+WeeklyView.displayName = 'WeeklyView'
+
+export default WeeklyView
