@@ -1,4 +1,5 @@
 import { useMemo, forwardRef } from 'react'
+import { format } from 'date-fns'
 import { useCalendarStore } from '../../store/calendarStore'
 import { mergeShifts } from '../../lib/grouping/shiftMerger'
 import { buildWeekCalendar } from '../../lib/calendar/weekBuilder'
@@ -36,6 +37,13 @@ const WeeklyView = forwardRef<HTMLDivElement>((_, printRef) => {
       `}
     >
       <div className="p-6">
+        {days.length > 0 && (
+          <div className="mb-6 text-center">
+            <h2 className="text-lg font-semibold text-gray-700">
+              Week of {format(days[0].date, 'MMMM d')} - {format(days[days.length - 1].date, 'MMMM d')}
+            </h2>
+          </div>
+        )}
         <WeekGrid days={days} timezone={settings.timezone} timeFormat={settings.timeFormat} colorAssignments={settings.colorAssignments} />
         <div className="legend-section mt-8 border-t pt-6">
           <Legend people={Array.from(people.values())} colorAssignments={settings.colorAssignments} />
