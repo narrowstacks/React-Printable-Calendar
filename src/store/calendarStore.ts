@@ -27,7 +27,6 @@ interface CalendarState {
 const defaultSettings: AppSettings = {
   view: 'monthly',
   paperSize: 'letter',
-  orientation: 'portrait',
   timezone: 'America/Los_Angeles',
   timeFormat: '24h',
   colorAssignments: {},

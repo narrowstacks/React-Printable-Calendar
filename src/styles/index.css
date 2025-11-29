@@ -77,10 +77,11 @@
     padding: 0.5rem !important;
   }
 
-  /* Compact header for print */
+  /* Week header for print - larger and using margin space */
   .calendar-container h2 {
-    margin-bottom: 0.5rem !important;
-    font-size: 1rem !important;
+    margin-bottom: 0.75rem !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
   }
 
   /* Reduce time axis width for print */

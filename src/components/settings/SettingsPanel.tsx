@@ -93,44 +93,14 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
             </label>
             <select
               value={settings.paperSize}
-              onChange={(e) => updateSettings({ paperSize: e.target.value as 'letter' | 'a4' | 'legal' })}
+              onChange={(e) => updateSettings({ paperSize: e.target.value as 'letter' | 'a4' | 'legal' | 'tabloid' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="letter">US Letter (8.5" x 11")</option>
               <option value="a4">A4 (210mm x 297mm)</option>
               <option value="legal">US Legal (8.5" x 14")</option>
+              <option value="tabloid">Tabloid (11" x 17")</option>
             </select>
-          </div>
-
-          {/* Orientation */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Orientation
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="orientation"
-                  value="portrait"
-                  checked={settings.orientation === 'portrait'}
-                  onChange={(e) => updateSettings({ orientation: e.target.value as 'portrait' | 'landscape' })}
-                  className="mr-2"
-                />
-                <span className="text-sm">Portrait</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="orientation"
-                  value="landscape"
-                  checked={settings.orientation === 'landscape'}
-                  onChange={(e) => updateSettings({ orientation: e.target.value as 'portrait' | 'landscape' })}
-                  className="mr-2"
-                />
-                <span className="text-sm">Landscape</span>
-              </label>
-            </div>
           </div>
 
           {/* Color Customization */}

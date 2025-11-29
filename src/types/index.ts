@@ -54,8 +54,7 @@ export type TimeFormat = '12h' | '24h';
 
 export interface AppSettings {
   view: CalendarView;
-  paperSize: 'letter' | 'a4' | 'legal';
-  orientation: 'portrait' | 'landscape';
+  paperSize: 'letter' | 'a4' | 'legal' | 'tabloid';
   timezone: string; // IANA timezone (e.g., 'America/Los_Angeles')
   timeFormat: TimeFormat; // '12h' or '24h'
   colorAssignments: Record<string, string>; // person name -> hex color

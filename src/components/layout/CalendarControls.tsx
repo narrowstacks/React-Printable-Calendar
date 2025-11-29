@@ -8,7 +8,6 @@ interface CalendarControlsProps {
   printRef?: React.RefObject<HTMLDivElement>;
 }
 
-
 export default function CalendarControls({
   onSettingsClick,
   printRef,
@@ -24,8 +23,7 @@ export default function CalendarControls({
 
     const element = printRef.current;
 
-    const orientation: "portrait" | "landscape" =
-      settings.orientation === "landscape" ? "landscape" : "portrait";
+    const orientation = "landscape" as const;
 
     // Clone the element to avoid modifying the original
     const clonedElement = element.cloneNode(true) as HTMLElement;
@@ -47,15 +45,20 @@ export default function CalendarControls({
     clonedElement.style.borderRadius = "0";
 
     // Reduce inner container padding (the p-6 class = 24px, way too much)
-    const innerContainer = clonedElement.querySelector(":scope > div") as HTMLElement;
+    const innerContainer = clonedElement.querySelector(
+      ":scope > div"
+    ) as HTMLElement;
     if (innerContainer) {
       innerContainer.style.padding = "4px";
     }
 
-    // Fix all shift blocks - ensure text isn't clipped
-    const shiftBlocks = clonedElement.querySelectorAll(".shift-block") as NodeListOf<HTMLElement>;
+    // Fix all shift blocks - ensure text isn't clipped and reduce top padding
+    const shiftBlocks = clonedElement.querySelectorAll(
+      ".shift-block"
+    ) as NodeListOf<HTMLElement>;
     shiftBlocks.forEach((block) => {
       block.style.overflow = "visible";
+      block.style.paddingTop = "4px";
       // Ensure children can overflow too
       const children = block.querySelectorAll("*") as NodeListOf<HTMLElement>;
       children.forEach((child) => {
@@ -64,23 +67,86 @@ export default function CalendarControls({
       });
     });
 
-    // Compact the header
+    // Style the header - make it larger like a page title, centered with spacing
     const header = clonedElement.querySelector("h2") as HTMLElement;
     if (header) {
-      header.style.marginBottom = "4px";
+      header.style.fontSize = "24px";
+      header.style.fontWeight = "700";
+      header.style.marginBottom = "12px";
       header.style.marginTop = "0";
       header.style.paddingTop = "0";
+      header.style.textAlign = "center";
     }
 
     // Remove any margin from week header container
     const headerContainer = clonedElement.querySelector(".mb-6") as HTMLElement;
     if (headerContainer) {
-      headerContainer.style.marginBottom = "8px";
+      headerContainer.style.marginBottom = "4px";
     }
+
+    // Reduce hour row heights slightly to fit on one page
+    // Scale factor adjusted to fill page while staying on one page
+    const scaleFactor = 0.94;
+    const originalHourHeight = 50;
+    const newHourHeight = originalHourHeight * scaleFactor;
+
+    // Scale time axis rows
+    const timeSlots = clonedElement.querySelectorAll(
+      ".week-grid-container [style*='height: 50px']"
+    ) as NodeListOf<HTMLElement>;
+    timeSlots.forEach((slot) => {
+      slot.style.height = `${newHourHeight}px`;
+    });
+
+    // Scale day column containers (minHeight)
+    const dayColumnGrids = clonedElement.querySelectorAll(
+      ".day-column > .relative"
+    ) as NodeListOf<HTMLElement>;
+    dayColumnGrids.forEach((grid) => {
+      const currentMinHeight = grid.style.minHeight;
+      if (currentMinHeight) {
+        const value = parseFloat(currentMinHeight);
+        grid.style.minHeight = `${value * scaleFactor}px`;
+      }
+    });
+
+    // Scale hour divider positions and heights in day columns
+    const hourDividers = clonedElement.querySelectorAll(
+      ".day-column .absolute.border-b"
+    ) as NodeListOf<HTMLElement>;
+    hourDividers.forEach((divider) => {
+      const currentTop = divider.style.top;
+      const currentHeight = divider.style.height;
+      if (currentTop) {
+        const topValue = parseFloat(currentTop);
+        divider.style.top = `${topValue * scaleFactor}px`;
+      }
+      if (currentHeight) {
+        const heightValue = parseFloat(currentHeight);
+        divider.style.height = `${heightValue * scaleFactor}px`;
+      }
+    });
+
+    // Scale shift block positions
+    const shiftBlocksForScaling = clonedElement.querySelectorAll(
+      ".shift-block"
+    ) as NodeListOf<HTMLElement>;
+    shiftBlocksForScaling.forEach((block) => {
+      const currentTop = block.style.top;
+      const currentHeight = block.style.height;
+      if (currentTop) {
+        const topValue = parseFloat(currentTop);
+        block.style.top = `${topValue * scaleFactor}px`;
+      }
+      if (currentHeight) {
+        const heightValue = parseFloat(currentHeight);
+        block.style.height = `${heightValue * scaleFactor}px`;
+      }
+    });
 
     // Simple, minimal configuration
     const opt = {
-      margin: 0.3,
+      margin: 0.1,
       filename: "calendar.pdf",
       image: { type: "jpeg" as const, quality: 0.98 },
       html2canvas: {

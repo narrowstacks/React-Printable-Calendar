@@ -43,7 +43,7 @@ const WeeklyView = forwardRef<HTMLDivElement>((_, printRef) => {
       ref={printRef}
       className={`
         bg-white rounded-lg shadow calendar-container
-        ${settings.orientation === "landscape" ? "landscape" : "portrait"}
+        landscape
       `}
     >
       <div className="p-6">
