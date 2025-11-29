@@ -41,7 +41,7 @@ export default function ShiftBlock({
 
   return (
     <div
-      className="absolute shift-block text-white overflow-hidden"
+      className="absolute shift-block text-white"
       style={{
         top: `${topPx}px`,
         bottom: "auto",
@@ -54,26 +54,24 @@ export default function ShiftBlock({
         opacity: 0.92 - indexInGroup * 0.08, // Slight transparency for stacked layers
         border: `2px solid ${position.displayColor}`,
         boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
+        overflow: "visible", // Allow text to overflow if needed for print
       }}
     >
       {/* Content wrapper with padding */}
       <div
-        className="px-2 py-1 text-xs overflow-hidden"
+        className="px-1.5 py-0.5 text-xs"
         style={{
           textAlign: textAlignment as any,
           whiteSpace: "normal",
           wordBreak: "break-word",
-          overflow: "hidden",
         }}
       >
-        {/* People names - always at top, only shown once */}
-        <div className="font-semibold leading-tight">
+        {/* People names - each on separate line */}
+        <div className="font-semibold" style={{ lineHeight: 1.3 }}>
           {shift.people.length <= 3 ? (
             // Show all names for 1-3 people
             shift.people.map((p) => (
-              <div key={p.id} className="break-words">
+              <div key={p.id}>
                 {p.name}
               </div>
             ))
@@ -81,7 +79,7 @@ export default function ShiftBlock({
             // Show abbreviated for 4+ people
             <>
               {shift.people.slice(0, 2).map((p) => (
-                <div key={p.id} className="break-words">
+                <div key={p.id}>
                   {p.name}
                 </div>
               ))}
@@ -90,13 +88,8 @@ export default function ShiftBlock({
           )}
         </div>
 
-        {/* Shift title
-        <div className="font-semibold leading-tight mt-1">
-          {shift.title}
-        </div> */}
-
-        {/* Time - shown only once */}
-        <div className="text-xs leading-tight opacity-90 mt-1">
+        {/* Time */}
+        <div className="text-xs opacity-90" style={{ lineHeight: 1.3, whiteSpace: "nowrap" }}>
           {formatTimeRange(shift.start, shift.end, timezone, timeFormat)}
         </div>
       </div>

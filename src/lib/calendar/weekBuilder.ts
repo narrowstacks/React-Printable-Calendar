@@ -152,3 +152,28 @@ function findOverlapGroups(shifts: Shift[]): Shift[][] {
 function shiftsOverlap(shift1: Shift, shift2: Shift): boolean {
   return shift1.start < shift2.end && shift1.end > shift2.start
 }
+
+/**
+ * Detect the earliest and latest times from a collection of days with shifts
+ * Returns an object with startHour and endHour, with 1 hour buffer before and after
+ */
+export function detectTimeRange(days: CalendarDay[]): { startHour: number; endHour: number } {
+  let minHour = 23
+  let maxHour = 0
+
+  days.forEach(day => {
+    day.shifts.forEach(mergedShift => {
+      const startHour = mergedShift.shift.start.getHours()
+      const endHour = mergedShift.shift.end.getHours()
+
+      minHour = Math.min(minHour, startHour)
+      maxHour = Math.max(maxHour, endHour)
+    })
+  })
+
+  // Add 1 hour buffer before and after for readability
+  const startHour = Math.max(0, minHour - 1)
+  const endHour = Math.min(24, maxHour + 1)
+
+  return { startHour, endHour }
+}

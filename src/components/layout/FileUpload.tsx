@@ -187,32 +187,23 @@ export default function FileUpload() {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Upload ICS File
         </label>
-        <div className="flex gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".ics"
-            onChange={(e) => {
-              const file = e.currentTarget.files?.[0]
-              if (file) handleFileSelect(file)
-            }}
-            disabled={isLoading}
-            className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100
-              disabled:opacity-50"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
-          >
-            Choose File
-          </button>
-        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".ics"
+          onChange={(e) => {
+            const file = e.currentTarget.files?.[0]
+            if (file) handleFileSelect(file)
+          }}
+          disabled={isLoading}
+          className="block w-full text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-full file:border-0
+            file:text-sm file:font-semibold
+            file:bg-blue-50 file:text-blue-700
+            hover:file:bg-blue-100
+            disabled:opacity-50"
+        />
       </div>
 
       {/* URL Input */}

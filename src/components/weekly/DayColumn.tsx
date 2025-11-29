@@ -51,9 +51,9 @@ export default function DayColumn({ day, timeSlots, hourHeight, timezone, timeFo
   )
 
   return (
-    <div className={`flex-1 border-r border-gray-200 last:border-r-0 relative ${day.isToday ? 'bg-blue-50' : day.isWeekend ? 'bg-gray-50' : 'bg-white'}`}>
+    <div className={`day-column flex-1 border-r border-gray-200 last:border-r-0 relative ${day.isToday ? 'bg-blue-50' : day.isWeekend ? 'bg-gray-50' : 'bg-white'}`}>
       {/* Day header */}
-      <div className="h-12 border-b border-gray-200 p-2 text-center font-semibold text-sm">
+      <div className="h-12 border-b border-gray-200 flex flex-col items-center justify-center font-semibold text-sm">
         <div className="text-xs text-gray-600">{formatDayOfWeek(day.date, timezone)}</div>
         <div className={day.isToday ? 'text-blue-600' : ''}>{formatDate(day.date, timezone)}</div>
       </div>

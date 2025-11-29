@@ -10,6 +10,8 @@ interface WeekGridProps {
   timezone: string;
   timeFormat: TimeFormat;
   colorAssignments: Record<string, string>;
+  startHour: number;
+  endHour: number;
 }
 
 export default function WeekGrid({
@@ -17,11 +19,13 @@ export default function WeekGrid({
   timezone,
   timeFormat,
   colorAssignments,
+  startHour,
+  endHour,
 }: WeekGridProps) {
-  const timeSlots = generateTimeSlots(6, 23);
+  const timeSlots = generateTimeSlots(startHour, endHour);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="week-grid-container overflow-x-auto">
       {/* Main grid container */}
       <div className="flex border border-gray-200 rounded">
         {/* Time axis */}

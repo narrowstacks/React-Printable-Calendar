@@ -29,7 +29,33 @@ export function parseICSString(icsString: string): RawEvent[] {
     const rawEvents: RawEvent[] = []
     const now = new Date()
 
+    // Phase 1: Separate events into recurring masters, exceptions, and single events
+    const recurringByUid = new Map<string, ICAL.Component>()
+    const exceptionsByUid = new Map<string, ICAL.Component[]>()
+    const singleEvents: ICAL.Component[] = []
+
     events.forEach((event) => {
+      const uid = event.getFirstPropertyValue('uid') as string
+      const recurrenceIdProp = event.getFirstPropertyValue('recurrence-id')
+      const rruleProp = event.getFirstProperty('rrule')
+
+      if (recurrenceIdProp) {
+        // This is a RECURRENCE-ID exception (modified instance)
+        if (!exceptionsByUid.has(uid)) {
+          exceptionsByUid.set(uid, [])
+        }
+        exceptionsByUid.get(uid)!.push(event)
+      } else if (rruleProp) {
+        // This is a recurring event master
+        recurringByUid.set(uid, event)
+      } else {
+        // Single event
+        singleEvents.push(event)
+      }
+    })
+
+    // Phase 2: Process recurring events with their exceptions
+    recurringByUid.forEach((event, uid) => {
       const startProp = event.getFirstPropertyValue('dtstart')
       const endProp = event.getFirstPropertyValue('dtend')
 
@@ -38,53 +64,36 @@ export function parseICSString(icsString: string): RawEvent[] {
       const startDate = startProp instanceof ICAL.Time ? startProp.toJSDate() : new Date(String(startProp))
       const endDate = endProp instanceof ICAL.Time ? endProp.toJSDate() : new Date(String(endProp))
 
-      // Check if this is a RECURRENCE-ID exception (modified instance of a recurring event)
-      const recurrenceIdProp = event.getFirstPropertyValue('recurrence-id')
-      const isException = !!recurrenceIdProp
+      const rruleProp = event.getFirstProperty('rrule')
+      const rruleValue = rruleProp?.getFirstValue()
 
-      if (isException) {
-        // This is a modified instance of a recurring event
-        try {
-          const recurrenceId = recurrenceIdProp instanceof ICAL.Time
-            ? recurrenceIdProp.toJSDate()
-            : new Date(String(recurrenceIdProp))
-
-          if (isNaN(recurrenceId.getTime())) {
-            console.warn('Invalid RECURRENCE-ID date:', recurrenceIdProp)
-            rawEvents.push(createRawEvent(event, startDate, endDate, { isException: true }))
-          } else {
-            rawEvents.push(createRawEvent(event, startDate, endDate, { isException: true, recurrenceId }))
-          }
-        } catch (error) {
-          console.warn('Error parsing RECURRENCE-ID:', error)
-          // Fallback: treat as exception without specific recurrence ID
-          rawEvents.push(createRawEvent(event, startDate, endDate, { isException: true }))
-        }
+      if (rruleValue instanceof ICAL.Recur) {
+        const exceptions = exceptionsByUid.get(uid) || []
+        const expanded = expandRecurringWithExceptions(
+          event,
+          startDate,
+          endDate,
+          rruleValue,
+          exceptions,
+          now
+        )
+        rawEvents.push(...expanded)
       } else {
-        // Get RRULE for recurring events
-        const rruleProp = event.getFirstProperty('rrule')
-
-        if (rruleProp) {
-          const rruleValue = rruleProp.getFirstValue()
-          if (rruleValue instanceof ICAL.Recur) {
-            // Expand recurring event using the Recur object directly
-            const expanded = expandRecurringEventDirect(
-              event,
-              startDate,
-              endDate,
-              rruleValue,
-              now
-            )
-            rawEvents.push(...expanded)
-          } else {
-            // Single event
-            rawEvents.push(createRawEvent(event, startDate, endDate))
-          }
-        } else {
-          // Single event
-          rawEvents.push(createRawEvent(event, startDate, endDate))
-        }
+        rawEvents.push(createRawEvent(event, startDate, endDate))
       }
+    })
+
+    // Phase 3: Process single events
+    singleEvents.forEach((event) => {
+      const startProp = event.getFirstPropertyValue('dtstart')
+      const endProp = event.getFirstPropertyValue('dtend')
+
+      if (!startProp || !endProp) return
+
+      const startDate = startProp instanceof ICAL.Time ? startProp.toJSDate() : new Date(String(startProp))
+      const endDate = endProp instanceof ICAL.Time ? endProp.toJSDate() : new Date(String(endProp))
+
+      rawEvents.push(createRawEvent(event, startDate, endDate))
     })
 
     return rawEvents
@@ -94,22 +103,41 @@ export function parseICSString(icsString: string): RawEvent[] {
   }
 }
 
-function expandRecurringEventDirect(
-  event: ICAL.Component,
+/**
+ * Expands a recurring event while properly handling RECURRENCE-ID exceptions
+ * Exceptions replace the original occurrence for that date
+ */
+function expandRecurringWithExceptions(
+  masterEvent: ICAL.Component,
   startDate: Date,
   endDate: Date,
   rrule: ICAL.Recur,
+  exceptions: ICAL.Component[],
   afterDate: Date
 ): RawEvent[] {
   const results: RawEvent[] = []
   const duration = endDate.getTime() - startDate.getTime()
 
   try {
-    // Parse excluded dates (EXDATE) from the event
-    const excludedDates = parseExcludedDates(event)
+    // Build map of exceptions by their recurrence-id timestamp
+    const exceptionMap = new Map<number, ICAL.Component>()
+    exceptions.forEach(exc => {
+      const recIdProp = exc.getFirstPropertyValue('recurrence-id')
+      if (recIdProp) {
+        const recIdDate = recIdProp instanceof ICAL.Time
+          ? recIdProp.toJSDate()
+          : new Date(String(recIdProp))
+        if (!isNaN(recIdDate.getTime())) {
+          exceptionMap.set(recIdDate.getTime(), exc)
+        }
+      }
+    })
 
-    // Generate occurrences for the next 12 months
-    const endRange = new Date(afterDate.getFullYear() + 1, afterDate.getMonth(), afterDate.getDate())
+    // Parse excluded dates (EXDATE) from the event
+    const excludedDates = parseExcludedDates(masterEvent)
+
+    // Generate occurrences for the next 2 years (extended from 12 months)
+    const endRange = new Date(afterDate.getFullYear() + 2, afterDate.getMonth(), afterDate.getDate())
     const startICAL = ICAL.Time.fromJSDate(startDate)
 
     const iterator = rrule.iterator(startICAL)
@@ -117,21 +145,43 @@ function expandRecurringEventDirect(
 
     while (occurrence && occurrence.toJSDate() < endRange) {
       const occStart = occurrence.toJSDate()
+      const occTimestamp = occStart.getTime()
 
-      // Skip this occurrence if it's in the EXDATE list
+      // Skip if excluded via EXDATE
       if (isOccurrenceExcluded(occStart, excludedDates)) {
         occurrence = iterator.next()
         continue
       }
 
-      const occEnd = new Date(occStart.getTime() + duration)
-      results.push(createRawEvent(event, occStart, occEnd))
+      // Check if there's an exception for this occurrence
+      if (exceptionMap.has(occTimestamp)) {
+        // Use the exception instead of the master
+        const excEvent = exceptionMap.get(occTimestamp)!
+        const excStartProp = excEvent.getFirstPropertyValue('dtstart')
+        const excEndProp = excEvent.getFirstPropertyValue('dtend')
+
+        if (excStartProp && excEndProp) {
+          const excStartDate = excStartProp instanceof ICAL.Time
+            ? excStartProp.toJSDate()
+            : new Date(String(excStartProp))
+          const excEndDate = excEndProp instanceof ICAL.Time
+            ? excEndProp.toJSDate()
+            : new Date(String(excEndProp))
+
+          results.push(createRawEvent(excEvent, excStartDate, excEndDate, { isException: true }))
+        }
+      } else {
+        // Use the master event data for this occurrence
+        const occEnd = new Date(occStart.getTime() + duration)
+        results.push(createRawEvent(masterEvent, occStart, occEnd))
+      }
+
       occurrence = iterator.next()
     }
   } catch (error) {
     console.warn('Error expanding recurring event:', error)
     // Fallback: just use the original event
-    results.push(createRawEvent(event, startDate, endDate))
+    results.push(createRawEvent(masterEvent, startDate, endDate))
   }
 
   return results
@@ -161,7 +211,7 @@ function createRawEvent(event: ICAL.Component, startDate: Date, endDate: Date, o
 
 /**
  * Parses EXDATE (excluded dates) from an ICS event component
- * @returns Set of date timestamps (at midnight) that should be excluded from recurrence
+ * @returns Set of date timestamps (at midnight UTC) that should be excluded from recurrence
  */
 function parseExcludedDates(event: ICAL.Component): Set<number> {
   const excludedDates = new Set<number>()
@@ -193,8 +243,13 @@ function parseExcludedDates(event: ICAL.Component): Set<number> {
             return
           }
 
-          // Store midnight of each excluded date for accurate comparison
-          const dateKey = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+          // Store midnight UTC of each excluded date for accurate comparison
+          // Use Date.UTC to ensure consistent timezone handling
+          const dateKey = Date.UTC(
+            date.getUTCFullYear(),
+            date.getUTCMonth(),
+            date.getUTCDate()
+          )
           excludedDates.add(dateKey)
         } catch (e) {
           console.warn('Error parsing EXDATE value:', val, e instanceof Error ? e.message : String(e))
@@ -211,11 +266,15 @@ function parseExcludedDates(event: ICAL.Component): Set<number> {
 /**
  * Checks if an occurrence date is in the excluded dates set
  * @param occurrenceDate The occurrence date to check
- * @param excludedDates Set of excluded date timestamps (at midnight)
+ * @param excludedDates Set of excluded date timestamps (at midnight UTC)
  * @returns true if the occurrence should be excluded
  */
 function isOccurrenceExcluded(occurrenceDate: Date, excludedDates: Set<number>): boolean {
-  // Normalize to midnight UTC for comparison
-  const dateKey = new Date(occurrenceDate.getUTCFullYear(), occurrenceDate.getUTCMonth(), occurrenceDate.getUTCDate()).getTime()
+  // Use Date.UTC consistently with parseExcludedDates
+  const dateKey = Date.UTC(
+    occurrenceDate.getUTCFullYear(),
+    occurrenceDate.getUTCMonth(),
+    occurrenceDate.getUTCDate()
+  )
   return excludedDates.has(dateKey)
 }

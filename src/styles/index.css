@@ -14,7 +14,7 @@
   }
 
   .shift-block {
-    @apply border-2 rounded p-2 text-sm font-medium overflow-hidden;
+    @apply border-2 rounded p-2 text-sm font-medium;
   }
 
   .person-badge {
@@ -39,6 +39,11 @@
     @apply hidden !important;
   }
 
+  /* Hide legend in browser print to match PDF behavior */
+  .legend-section {
+    @apply hidden !important;
+  }
+
   .page-break {
     page-break-after: always;
   }
@@ -53,8 +58,34 @@
 
   .shift-block {
     @apply border-2 break-inside-avoid;
-    overflow: hidden !important;
     page-break-inside: avoid;
+  }
+
+  /* Weekly view print optimization - remove horizontal scroll */
+  .week-grid-container {
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  .week-grid-container .day-column {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  /* Reduce padding for print to prevent second page */
+  .calendar-container > div {
+    padding: 0.5rem !important;
+  }
+
+  /* Compact header for print */
+  .calendar-container h2 {
+    margin-bottom: 0.5rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Reduce time axis width for print */
+  .week-grid-container .flex-shrink-0.w-16 {
+    width: 3rem !important;
   }
 
   /* Ensure colors print correctly */

@@ -29,7 +29,8 @@ export function formatTime(
 }
 
 /**
- * Format a time range (e.g., "9:00-17:00" or "9:00 AM - 5:00 PM")
+ * Format a time range (e.g., "9:00-17:00" or "9AM-5PM")
+ * Uses compact format for 12h to save space
  */
 export function formatTimeRange(
   startDate: Date,
@@ -37,6 +38,27 @@ export function formatTimeRange(
   timezone: string,
   timeFormat: TimeFormat
 ): string {
+  if (timeFormat === '12h') {
+    // Use compact format without minutes when on the hour
+    const formatCompact = (date: Date) => {
+      try {
+        const zonedDate = toZonedTime(date, timezone)
+        const minutes = zonedDate.getMinutes()
+        if (minutes === 0) {
+          return format(zonedDate, 'ha', { timeZone: timezone }).toLowerCase()
+        }
+        return format(zonedDate, 'h:mma', { timeZone: timezone }).toLowerCase()
+      } catch {
+        const minutes = date.getMinutes()
+        if (minutes === 0) {
+          return format(date, 'ha').toLowerCase()
+        }
+        return format(date, 'h:mma').toLowerCase()
+      }
+    }
+    return `${formatCompact(startDate)}-${formatCompact(endDate)}`
+  }
+
   const startTime = formatTime(startDate, timezone, timeFormat)
   const endTime = formatTime(endDate, timezone, timeFormat)
   return `${startTime}-${endTime}`
