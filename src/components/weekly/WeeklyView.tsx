@@ -17,12 +17,12 @@ const WeeklyView = forwardRef<HTMLDivElement>((_, printRef) => {
       return { days: [], startHour: 6, endHour: 23 };
     }
 
-    const { shifts: _, mergedShifts } = mergeShifts(
+    const { mergedShifts } = mergeShifts(
       rawEvents,
       people,
       settings.colorAssignments
     );
-    const days = buildWeekCalendar(currentDate, [], mergedShifts);
+    const days = buildWeekCalendar(currentDate, mergedShifts);
     const { startHour, endHour } = detectTimeRange(days);
 
     return { days, startHour, endHour };

@@ -46,7 +46,6 @@ export default function DayColumn({ day, timeSlots, hourHeight, timezone, timeFo
   const shiftPositions = calculateShiftPositions(
     mergedShifts.map(m => m.shift),
     timeSlots[0],
-    timeSlots[timeSlots.length - 1] + 1,
     colorMap
   )
 

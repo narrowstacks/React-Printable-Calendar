@@ -8,14 +8,8 @@ import {
 } from 'date-fns'
 import { CalendarDay, Shift, MergedShift } from '../../types'
 
-export interface TimeSlot {
-  hour: number
-  shifts: { shift: Shift, position: number, width: number }[]
-}
-
 export function buildWeekCalendar(
   date: Date,
-  _shifts: Shift[],
   mergedShifts: MergedShift[]
 ): CalendarDay[] {
   const weekStart = startOfWeek(date, { weekStartsOn: 0 }) // Sunday = 0
@@ -74,7 +68,6 @@ export interface ShiftPosition {
 export function calculateShiftPositions(
   dayShifts: Shift[],
   startHour: number = 6,
-  _endHour: number = 23,
   colorMap: Map<string, string> = new Map()
 ): ShiftPosition[] {
   const positions: ShiftPosition[] = []

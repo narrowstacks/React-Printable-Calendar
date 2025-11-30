@@ -1,9 +1,8 @@
 import { CalendarDay, TimeFormat } from "../../types";
 import { generateTimeSlots } from "../../lib/calendar/weekBuilder";
 import { formatTime } from "../../lib/calendar/timeFormatter";
+import { HOUR_HEIGHT } from "../../lib/config/printConfig";
 import DayColumn from "./DayColumn";
-
-const HOUR_HEIGHT = 50; // pixels per hour
 
 interface WeekGridProps {
   days: CalendarDay[];

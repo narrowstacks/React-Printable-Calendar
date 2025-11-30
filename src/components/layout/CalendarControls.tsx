@@ -98,7 +98,7 @@ export default function CalendarControls({
 
       const allWeeksData = weeksInMonth.map(weekStart => ({
         weekStart,
-        days: buildWeekCalendar(weekStart, [], mergedShifts),
+        days: buildWeekCalendar(weekStart, mergedShifts),
       }));
 
       let monthStartHour = 23;
