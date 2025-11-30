@@ -41,10 +41,23 @@ export function buildMonthCalendar(
     )
 
     const calendarDays: CalendarDay[] = days.map(date => {
-      // Get shifts for this day
-      const dayShifts = mergedShifts.filter(merged =>
-        isSameDay(new Date(merged.shift.start), date)
-      )
+      // Get shifts for this day, sorted by start time then alphabetically by name
+      const dayShifts = mergedShifts
+        .filter(merged => isSameDay(new Date(merged.shift.start), date))
+        .sort((a, b) => {
+          // First sort by start time
+          const startA = new Date(a.shift.start).getTime()
+          const startB = new Date(b.shift.start).getTime()
+          if (startA !== startB) return startA - startB
+
+          // If start times are equal, sort by end time
+          const endA = new Date(a.shift.end).getTime()
+          const endB = new Date(b.shift.end).getTime()
+          if (endA !== endB) return endA - endB
+
+          // If both start and end times are equal, sort alphabetically by name
+          return a.peopleList.localeCompare(b.peopleList)
+        })
 
       return {
         date,
