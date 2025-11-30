@@ -13,11 +13,10 @@ const MonthlyView = forwardRef<HTMLDivElement>((_, printRef) => {
       return { weeks: [] }
     }
 
-    const { shifts: _, mergedShifts } = mergeShifts(rawEvents, people, settings.colorAssignments)
+    const { mergedShifts } = mergeShifts(rawEvents, people, settings.colorAssignments)
     const weeks = buildMonthCalendar(
       currentDate.getFullYear(),
       currentDate.getMonth(),
-      [],
       mergedShifts
     )
 

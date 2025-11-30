@@ -1,6 +1,7 @@
 import { ShiftPosition } from "../../lib/calendar/weekBuilder";
-import { TimeFormat, Shift, Person } from "../../types";
+import { TimeFormat } from "../../types";
 import { formatTimeRange } from "../../lib/calendar/timeFormatter";
+import { getShiftBackgroundStyle, getContrastTextColor } from "../../lib/color/colorUtils";
 
 interface ShiftBlockProps {
   position: ShiftPosition;
@@ -25,8 +26,8 @@ export default function ShiftBlock({
   const offsetY = indexInGroup * LAYER_OFFSET;
 
   // Get background (gradient for multiple people, solid color for single)
-  const backgroundStyle = getBackgroundStyle(shift, colorAssignments, position.displayColor);
-  const textColor = getTextColor(position.displayColor);
+  const backgroundStyle = getShiftBackgroundStyle(shift, colorAssignments, position.displayColor);
+  const textColor = getContrastTextColor(position.displayColor);
 
   // Text always at top, alternate alignment for readability when stacked
   const textAlignment =
@@ -95,51 +96,4 @@ export default function ShiftBlock({
       </div>
     </div>
   );
-}
-
-function getBackgroundStyle(
-  shift: Shift,
-  colorAssignments: Record<string, string>,
-  defaultColor: string
-): React.CSSProperties {
-  // If single person or no people, use solid color
-  if (shift.people.length <= 1) {
-    return { backgroundColor: defaultColor };
-  }
-
-  // Get unique colors from all people in the shift
-  const colors = shift.people.map((person: Person) => {
-    return colorAssignments[person.name] || person.color;
-  });
-
-  // Remove duplicates
-  const uniqueColors = Array.from(new Set(colors));
-
-  // If all people have the same color, use solid color
-  if (uniqueColors.length === 1) {
-    return { backgroundColor: uniqueColors[0] };
-  }
-
-  // Create a gradient from all unique colors
-  const gradientStops = uniqueColors
-    .map((color, index) => {
-      const percentage = (index / (uniqueColors.length - 1)) * 100;
-      return `${color} ${percentage}%`;
-    })
-    .join(", ");
-
-  return {
-    background: `linear-gradient(135deg, ${gradientStops})` as any,
-  };
-}
-
-function getTextColor(bgColor: string): string {
-  // Simple luminance calculation
-  const hex = bgColor.replace("#", "");
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-  return luminance > 0.5 ? "#000000" : "#ffffff";
 }

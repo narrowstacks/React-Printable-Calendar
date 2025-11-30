@@ -1,6 +1,7 @@
 import { RawEvent, Person, Shift, MergedShift } from '../../types'
 import { extractPeopleAndTitle } from '../parsers/nameExtractor'
 import { format } from 'date-fns'
+import { getShiftColor } from '../color/colorUtils'
 
 export function mergeShifts(
   rawEvents: RawEvent[],
@@ -82,69 +83,10 @@ function createMergedShift(shift: Shift, shiftKey: string, colorAssignments: Rec
     peopleList = `${first}, +${remaining} more`
   }
 
-  // Pick dominant color from people
-  const displayColor = getShiftColor(shift, colorAssignments)
-
   return {
     shiftKey,
     shift,
     peopleList,
-    displayColor,
+    displayColor: getShiftColor(shift, colorAssignments),
   }
-}
-
-function getShiftColor(shift: Shift, colorAssignments: Record<string, string> = {}): string {
-  if (shift.people.length === 0) {
-    return '#d1d5db' // gray
-  }
-
-  // Use first person's color, preferring custom assignment if available
-  const firstPerson = shift.people[0]
-  return colorAssignments[firstPerson.name] || firstPerson.color
-}
-
-/**
- * Group shifts by day
- */
-export function groupShiftsByDay(
-  shifts: Shift[]
-): Map<string, Shift[]> {
-  const grouped = new Map<string, Shift[]>()
-
-  shifts.forEach(shift => {
-    const dayKey = format(shift.start, 'yyyy-MM-dd')
-    if (!grouped.has(dayKey)) {
-      grouped.set(dayKey, [])
-    }
-    grouped.get(dayKey)!.push(shift)
-  })
-
-  return grouped
-}
-
-/**
- * Check if two shifts overlap
- */
-export function shiftsOverlap(shift1: Shift, shift2: Shift): boolean {
-  return shift1.start < shift2.end && shift1.end > shift2.start
-}
-
-/**
- * Detect overlapping shifts on same day
- */
-export function detectDayOverlaps(dayShifts: Shift[]): Map<string, Shift[]> {
-  const overlaps = new Map<string, Shift[]>()
-
-  for (let i = 0; i < dayShifts.length; i++) {
-    for (let j = i + 1; j < dayShifts.length; j++) {
-      if (shiftsOverlap(dayShifts[i], dayShifts[j])) {
-        const key = `${dayShifts[i].title}-${dayShifts[j].title}`
-        if (!overlaps.has(key)) {
-          overlaps.set(key, [dayShifts[i], dayShifts[j]])
-        }
-      }
-    }
-  }
-
-  return overlaps
 }

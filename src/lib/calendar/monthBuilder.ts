@@ -9,12 +9,11 @@ import {
   isWeekend,
   isSameDay,
 } from 'date-fns'
-import { CalendarDay, CalendarWeek, Shift, MergedShift } from '../../types'
+import { CalendarDay, CalendarWeek, MergedShift } from '../../types'
 
 export function buildMonthCalendar(
   year: number,
   month: number,
-  _shifts: Shift[],
   mergedShifts: MergedShift[]
 ): CalendarWeek[] {
   const firstDay = startOfMonth(new Date(year, month))
@@ -74,11 +73,4 @@ export function buildMonthCalendar(
   })
 
   return weekCalendars
-}
-
-export function getMonthShiftsForDay(
-  date: Date,
-  shifts: Shift[]
-): Shift[] {
-  return shifts.filter(shift => isSameDay(new Date(shift.start), date))
 }

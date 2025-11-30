@@ -1,4 +1,5 @@
 import { useCalendarStore } from '../../store/calendarStore'
+import { getPersonColor } from '../../lib/color/colorUtils'
 
 export default function ColorCustomizer() {
   const { people, settings, updateColorAssignment } = useCalendarStore()
@@ -23,8 +24,7 @@ export default function ColorCustomizer() {
   return (
     <div className="space-y-3">
       {personList.map((person) => {
-        // Get the color to display (override takes precedence)
-        const displayColor = settings.colorAssignments[person.name] || person.color
+        const displayColor = getPersonColor(person, settings.colorAssignments)
 
         return (
           <div key={person.id} className="flex items-center gap-3">

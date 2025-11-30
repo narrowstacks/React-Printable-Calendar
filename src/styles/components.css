@@ -1,0 +1,13 @@
+@layer components {
+  .calendar-container {
+    @apply bg-white shadow-lg;
+  }
+
+  .shift-block {
+    @apply border-2 rounded p-2 text-sm font-medium;
+  }
+
+  .person-badge {
+    @apply inline-block px-2 py-1 rounded text-white text-xs font-semibold mr-1 mb-1;
+  }
+}
