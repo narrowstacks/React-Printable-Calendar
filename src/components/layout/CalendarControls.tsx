@@ -84,11 +84,30 @@ export default function CalendarControls({
       headerContainer.style.marginBottom = "4px";
     }
 
-    // Reduce hour row heights slightly to fit on one page
-    // Scale factor adjusted to fill page while staying on one page
-    const scaleFactor = 0.94;
+    // Adjust scale factor and text sizes based on paper size
+    // 8.5" tall papers (letter, legal) use 0.94, larger papers scale up
+    const paperScaleConfig: Record<string, { scaleFactor: number; shiftTextSize: string; shiftTimeSize: string }> = {
+      letter: { scaleFactor: 0.94, shiftTextSize: "11px", shiftTimeSize: "10px" },
+      legal: { scaleFactor: 0.94, shiftTextSize: "11px", shiftTimeSize: "10px" },
+      tabloid: { scaleFactor: 1.25, shiftTextSize: "16px", shiftTimeSize: "14px" },
+    };
+    const config = paperScaleConfig[settings.paperSize] || paperScaleConfig.letter;
+    const scaleFactor = config.scaleFactor;
     const originalHourHeight = 50;
     const newHourHeight = originalHourHeight * scaleFactor;
+
+    // Apply text size adjustments to shift blocks
+    shiftBlocks.forEach((block) => {
+      // Find the name/time text elements and adjust size
+      const textElements = block.querySelectorAll("div, span") as NodeListOf<HTMLElement>;
+      textElements.forEach((el) => {
+        if (el.classList.contains("font-semibold") || el.classList.contains("font-medium")) {
+          el.style.fontSize = config.shiftTextSize;
+        } else if (el.classList.contains("text-xs") || el.classList.contains("text-sm")) {
+          el.style.fontSize = config.shiftTimeSize;
+        }
+      });
+    });
 
     // Scale time axis rows
     const timeSlots = clonedElement.querySelectorAll(
